@@ -1,6 +1,8 @@
 const express = require("express");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
+
 
 const app = express();
 app.use(express.static("public"));
@@ -9,7 +11,10 @@ app.use(express.urlencoded({extended: true}));
 
 mongoose.connect("mongodb://localhost:27017/userDB");
 
-const userSchema = {email: String, password: String};
+const userSchema = new mongoose.Schema({email: String, password: String});
+const secret = "THIS IS A LONG SECRET CODE";
+userSchema.plugin(encrypt, {"secret": secret, encryptedFields: ["password"]});
+
 const User = new mongoose.model("User", userSchema);
 
 app.get("/", function (req, res) {
@@ -38,8 +43,7 @@ app.get("/register", function (req, res) {
 });
 app.post("/register", function (req, res) {
     const newUser = new User({
-        email: req.body.username,
-        password: req.body.password,
+        email: req.body.username, password: req.body.password,
     });
     newUser.save()
         .then(function () {
